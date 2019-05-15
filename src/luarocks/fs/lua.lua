@@ -12,8 +12,8 @@ local util = require("luarocks.util")
 
 local pack = table.pack or function(...) return { n = select("#", ...), ... } end
 
-local socket_ok, zip_ok, lfs_ok, md5_ok, posix_ok, bz2_ok, _
-local http, ftp, zip, lfs, md5, posix, bz2
+local socket_ok, zip_ok, lfs_ok, md5_ok, digest_ok, posix_ok, bz2_ok, _
+local http, ftp, zip, lfs, md5, digest, posix, bz2
 
 if cfg.fs_use_modules then
    socket_ok, http = pcall(require, "socket.http")
@@ -22,6 +22,7 @@ if cfg.fs_use_modules then
    bz2_ok, bz2 = pcall(require, "bz2")
    lfs_ok, lfs = pcall(require, "lfs")
    md5_ok, md5 = pcall(require, "md5")
+   digest_ok, digest = pcall(require, "digest")
    posix_ok, posix = pcall(require, "posix")
 end
 
@@ -967,17 +968,20 @@ end
 -- MD5 functions
 ---------------------------------------------------------------------
 
-if md5_ok then
+local md5_hex = nil
 
--- Support the interface of lmd5 by lhf in addition to md5 by Roberto
--- and the keplerproject.
-if not md5.sumhexa and md5.digest then
-   md5.sumhexa = function(msg)
-      return md5.digest(msg)
+if digest_ok then
+   md5_hex = digest.md5_hex
+elseif md5_ok then
+   md5_hex = md5.sumhexa
+   --- Support the interface of lmd5 by lhf in addition to md5 by Roberto
+   --- and the keplerproject.
+   if not md5_hex and md5.digest then
+      md5_hex = md5.digest
    end
 end
 
-if md5.sumhexa then
+if md5_hex then
 
 --- Get the MD5 checksum for a file.
 -- @param file string: The file to be computed.
@@ -986,13 +990,12 @@ function fs_lua.get_md5(file)
    file = fs.absolute_name(file)
    local file_handler = io.open(file, "rb")
    if not file_handler then return nil, "Failed to open file for reading: "..file end
-   local computed = md5.sumhexa(file_handler:read("*a"))
+   local computed = md5_hex(file_handler:read("*a"))
    file_handler:close()
    if computed then return computed end
    return nil, "Failed to compute MD5 hash for file "..file
 end
 
-end
 end
 
 ---------------------------------------------------------------------
