@@ -604,6 +604,13 @@ function util.get_rocks_provided(rockspec)
       end
    end
 
+   local tarantool_ver_raw = rawget(_G, '_TARANTOOL')
+   if tarantool_ver_raw then
+      -- Tarantool
+      local tarantool_version = tarantool_ver_raw:match("([^-]+)-")
+      rocks_provided["tarantool"] = tarantool_version.."-1"
+   end
+
    if cfg.rocks_provided then
       util.deep_merge_under(rocks_provided, cfg.rocks_provided)
    end
