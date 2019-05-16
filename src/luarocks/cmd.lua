@@ -405,9 +405,11 @@ function cmd.run_command(description, commands, external_namespace, ...)
       cfg.project_dir = fs.absolute_name(cfg.project_dir)
    end
 
-   for _, module_name in ipairs(fs.modules(external_namespace)) do
-      if not commands[module_name] then
-         commands[module_name] = external_namespace.."."..module_name
+   if external_namespace then
+      for _, module_name in ipairs(fs.modules(external_namespace)) do
+         if not commands[module_name] then
+            commands[module_name] = external_namespace.."."..module_name
+         end
       end
    end
 
@@ -420,7 +422,7 @@ function cmd.run_command(description, commands, external_namespace, ...)
       die("Current directory does not exist. Please run LuaRocks from an existing directory.")
    end
 
-   ok, err = process_tree_flags(flags, cfg.project_dir)
+   local ok, err = process_tree_flags(flags, cfg.project_dir)
    if not ok then
       die(err)
    end

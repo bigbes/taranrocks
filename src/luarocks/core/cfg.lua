@@ -68,8 +68,8 @@ local function detect_sysconfdir()
    return basedir
 end
 
-local function set_confdirs(cfg, platforms, hardcoded_sysconfdir)
-   local sysconfdir = os.getenv("LUAROCKS_SYSCONFDIR") or hardcoded_sysconfdir
+local function set_confdirs(cfg, platforms, hardcoded)
+   local sysconfdir = os.getenv("LUAROCKS_SYSCONFDIR") or hardcoded.SYSCONFDIR
    if platforms.windows then
       cfg.home = os.getenv("APPDATA") or "c:"
       cfg.home_tree = cfg.home.."/luarocks"
@@ -79,10 +79,12 @@ local function set_confdirs(cfg, platforms, hardcoded_sysconfdir)
       if not sysconfdir then
          sysconfdir = detect_sysconfdir()
       end
-      cfg.home = os.getenv("HOME") or ""
-      cfg.home_tree = (os.getenv("USER") ~= "root") and cfg.home.."/.luarocks"
-      cfg.homeconfdir = cfg.home.."/.luarocks"
+      cfg.home = hardcoded.HOMEDIR or os.getenv("HOME") or ""
+      cfg.localdir = hardcoded.LOCALDIR or cfg.home
+      local home_tree_subdir = hardcoded.HOME_TREE_SUBDIR or "/.luarocks"
+      cfg.homeconfdir = cfg.localdir .. home_tree_subdir
       cfg.sysconfdir = sysconfdir or "/etc/luarocks"
+      cfg.home_tree = cfg.localdir .. home_tree_subdir
    end
 end
 
@@ -176,13 +178,13 @@ end
 
 --------------------------------------------------------------------------------
 
-local function make_defaults(lua_version, target_cpu, platforms, home)
+local function make_defaults(lua_version, target_cpu, platforms, home, hardcoded)
 
    -- Configure defaults:
    local defaults = {
 
-      lua_interpreter = "lua",
-      local_by_default = false,
+      lua_interpreter = hardcoded.LUA_INTERPRETER or "lua",
+      local_by_default = hardcoded.LOCAL_BY_DEFAULT or false,
       accept_unknown_fields = false,
       fs_use_modules = true,
       hooks_enabled = true,
@@ -193,16 +195,16 @@ local function make_defaults(lua_version, target_cpu, platforms, home)
       cache_fail_timeout = 86400,
       version_check_on_fail = true,
 
-      lua_modules_path = "/share/lua/"..lua_version,
-      lib_modules_path = "/lib/lua/"..lua_version,
-      rocks_subdir = "/lib/luarocks/rocks-"..lua_version,
+      lua_modules_path = hardcoded.LUA_MODULES_LUA_SUBDIR or "/share/lua/"..lua_version,
+      lib_modules_path = hardcoded.LUA_MODULES_LIB_SUBDIR or "/lib/lua/"..lua_version,
+      rocks_subdir = hardcoded.ROCKS_SUBDIR or "/lib/luarocks/rocks-"..lua_version,
 
       arch = "unknown",
       lib_extension = "unknown",
       obj_extension = "unknown",
       link_lua_explicitly = false,
 
-      rocks_servers = {
+      rocks_servers = hardcoded.ROCKS_SERVERS or {
          {
            "https://luarocks.org",
            "https://raw.githubusercontent.com/rocks-moonscript-org/moonrocks-mirror/master/",
@@ -271,12 +273,12 @@ local function make_defaults(lua_version, target_cpu, platforms, home)
          WGETNOCERTFLAG = "",
       },
 
-      external_deps_subdirs = {
+      external_deps_subdirs = hardcoded.EXTERNAL_DEPS_SUBDIRS or {
          bin = "bin",
          lib = "lib",
          include = "include"
       },
-      runtime_external_deps_subdirs = {
+      runtime_external_deps_subdirs = hardcoded.RUNTIME_EXTERNAL_DEPS_SUBDIRS or {
          bin = "bin",
          lib = "lib",
          include = "include"
@@ -499,6 +501,13 @@ local function make_rocks_provided(lua_version, luajit_version)
       rocks_provided_3_0["luajit"] = luajit_version.."-1"
    end
 
+   if rawget(_G, '_TARANTOOL') then
+      -- Tarantool
+      local tarantool_version = _TARANTOOL:match("([^-]+)-")
+      rocks_provided["tarantool"] = tarantool_version.."-1"
+      rocks_provided_3_0["tarantool"] = tarantool_version.."-1"
+   end
+
    return rocks_provided, rocks_provided_3_0
 end
 
@@ -547,6 +556,10 @@ local cfg = {}
 -- @param warning a logging function for warnings that takes a string
 -- @return true on success; nil and an error message on failure.
 function cfg.init(detected, warning)
+   if cfg.initialized == true then
+      return true
+   end
+
    detected = detected or {}
 
    local hc_ok, hardcoded = pcall(require, "luarocks.core.hardcoded")
@@ -554,6 +567,7 @@ function cfg.init(detected, warning)
       hardcoded = {}
    end
 
+   local arg = rawget(_G, 'arg')
    local lua_version = detected.lua_version or hardcoded.LUA_VERSION or _VERSION:sub(5)
    local luajit_version = detected.luajit_version or hardcoded.LUAJIT_VERSION or (jit and jit.version:sub(8))
    local lua_interpreter = detected.lua_interpreter or hardcoded.LUA_INTERPRETER or (arg and arg[-1] and arg[-1]:gsub(".*[\\/]", "")) or (is_windows and "lua.exe" or "lua")
@@ -633,7 +647,7 @@ function cfg.init(detected, warning)
    local home_config_file
    local project_config_file
    do
-      set_confdirs(cfg, platforms, hardcoded.SYSCONFDIR)
+      set_confdirs(cfg, platforms, hardcoded)
       local name = "config-"..cfg.lua_version..".lua"
       sys_config_file = (cfg.sysconfdir .. "/" .. name):gsub("\\", "/")
       home_config_file = (cfg.homeconfdir .. "/" .. name):gsub("\\", "/")
@@ -715,7 +729,7 @@ function cfg.init(detected, warning)
       end
    end
 
-   local defaults = make_defaults(lua_version, processor, platforms, cfg.home)
+   local defaults = make_defaults(lua_version, processor, platforms, cfg.home, hardcoded)
 
    if platforms.windows and hardcoded.WIN_TOOLS then
       local tools = { "SEVENZ", "CP", "FIND", "LS", "MD5SUM", "PWD", "RMDIR", "WGET", "MKDIR" }
@@ -826,6 +840,7 @@ function cfg.init(detected, warning)
       return table.concat(platform_keys, ", ")
    end
 
+   cfg.initialized = true
    return true
 end
 
