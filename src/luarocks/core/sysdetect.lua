@@ -367,6 +367,7 @@ function sysdetect.detect(input_file)
    local dirsep = package.config:sub(1,1)
    local files
 
+   local arg = rawget(_G, 'arg') or {}
    if input_file then
       files = { input_file }
    else

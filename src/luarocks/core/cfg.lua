@@ -170,13 +170,13 @@ end
 
 --------------------------------------------------------------------------------
 
-local function make_defaults(lua_version, target_cpu, platforms, home)
+local function make_defaults(lua_version, target_cpu, platforms, home, hardcoded)
 
    -- Configure defaults:
    local defaults = {
 
-      lua_interpreter = "lua",
-      local_by_default = false,
+      lua_interpreter = hardcoded.LUA_INTERPRETER or "lua",
+      local_by_default = hardcoded.LOCAL_BY_DEFAULT or false,
       accept_unknown_fields = false,
       fs_use_modules = true,
       hooks_enabled = true,
@@ -187,16 +187,16 @@ local function make_defaults(lua_version, target_cpu, platforms, home)
       cache_timeout = 60,
       cache_fail_timeout = 86400,
 
-      lua_modules_path = "/share/lua/"..lua_version,
-      lib_modules_path = "/lib/lua/"..lua_version,
-      rocks_subdir = "/lib/luarocks/rocks-"..lua_version,
+      lua_modules_path = hardcoded.LUA_MODULES_LUA_SUBDIR or "/share/lua/"..lua_version,
+      lib_modules_path = hardcoded.LUA_MODULES_LIB_SUBDIR or "/lib/lua/"..lua_version,
+      rocks_subdir = hardcoded.ROCKS_SUBDIR or "/lib/luarocks/rocks-"..lua_version,
 
       arch = "unknown",
       lib_extension = "unknown",
       obj_extension = "unknown",
       link_lua_explicitly = false,
 
-      rocks_servers = {
+      rocks_servers = hardcoded.ROCKS_SERVERS or {
          {
            "https://luarocks.org",
            "https://raw.githubusercontent.com/rocks-moonscript-org/moonrocks-mirror/master/",
@@ -264,12 +264,12 @@ local function make_defaults(lua_version, target_cpu, platforms, home)
          WGETNOCERTFLAG = "",
       },
 
-      external_deps_subdirs = {
+      external_deps_subdirs = hardcoded.EXTERNAL_DEPS_SUBDIRS or {
          bin = "bin",
          lib = "lib",
          include = "include"
       },
-      runtime_external_deps_subdirs = {
+      runtime_external_deps_subdirs = hardcoded.RUNTIME_EXTERNAL_DEPS_SUBDIRS or {
          bin = "bin",
          lib = "lib",
          include = "include"
@@ -556,6 +556,7 @@ local function use_defaults(cfg, defaults)
 end
 
 local function get_first_arg()
+   local arg = rawget(_G, 'arg')
    if not arg then
       return
    end
@@ -585,6 +586,10 @@ local cfg = {}
 -- @param warning a logging function for warnings that takes a string
 -- @return true on success; nil and an error message on failure.
 function cfg.init(detected, warning)
+   if cfg.initialized == true then
+      return true
+   end
+
    detected = detected or {}
 
    local exit_ok = true
@@ -687,8 +692,11 @@ function cfg.init(detected, warning)
          cfg.home_tree = cfg.home.."/luarocks"
          cfg.sysconfdir = sysconfdir or ((os.getenv("PROGRAMFILES") or "c:") .. "/luarocks")
       else
-         cfg.home = os.getenv("HOME") or ""
-         cfg.home_tree = cfg.home.."/.luarocks"
+         cfg.home = hardcoded.HOMEDIR or os.getenv("HOME") or ""
+         local localdir = hardcoded.LOCALDIR or cfg.home
+         local home_tree_subdir = hardcoded.HOME_TREE_SUBDIR or "/.luarocks"
+         cfg.homeconfdir = localdir .. home_tree_subdir
+         cfg.home_tree = localdir .. home_tree_subdir
          cfg.sysconfdir = sysconfdir or detect_sysconfdir() or "/etc/luarocks"
       end
    end
@@ -782,7 +790,7 @@ function cfg.init(detected, warning)
       end
    end
 
-   local defaults = make_defaults(cfg.lua_version, processor, platforms, cfg.home)
+   local defaults = make_defaults(cfg.lua_version, processor, platforms, cfg.home, hardcoded)
 
    if platforms.windows and hardcoded.WIN_TOOLS then
       local tools = { "SEVENZ", "CP", "FIND", "LS", "MD5SUM", "WGET", }
@@ -903,6 +911,7 @@ function cfg.init(detected, warning)
       return table.concat(platform_keys, ", ")
    end
 
+   cfg.initialized = true
    return exit_ok, exit_err, exit_what
 end
 
