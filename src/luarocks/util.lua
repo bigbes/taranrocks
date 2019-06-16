@@ -583,13 +583,24 @@ do
       if not util.exists(lua_exe) then
          return nil
       end
-      local lv, err = util.popen_read(Q(lua_exe) .. ' -e "io.write(_VERSION:sub(5))"')
+      local cmd = 'io.write(_VERSION:sub(5))'
+      -- Tarantool falls into the interactive mode if no script is
+      -- given even when -e option is passed.
+      if lua_exe:find('tarantool') then
+         cmd = cmd .. ' os.exit()'
+      end
+      local lv, err = util.popen_read(Q(lua_exe) .. (' -e "%s"'):format(cmd))
       if luaver and luaver ~= lv then
          return nil
       end
       local ljv
       if lv == "5.1" then
-         ljv = util.popen_read(Q(lua_exe) .. ' -e "io.write(tostring(jit and jit.version:sub(8)))"')
+         local cmd = 'io.write(tostring(jit and jit.version:sub(8)))'
+         -- Exit from the iteractive mode. See the comment above.
+         if lua_exe:find('tarantool') then
+            cmd = cmd .. ' os.exit()'
+         end
+         ljv = util.popen_read(Q(lua_exe) .. (' -e "%s"'):format(cmd))
          if ljv == "nil" then
             ljv = nil
          end
@@ -625,6 +636,7 @@ do
          end
          if luaver == "5.1" or not luaver then
             table.insert(names, "luajit" .. exe_suffix)
+            table.insert(names, "tarantool")
          end
          table.insert(names, "lua" .. exe_suffix)
 
