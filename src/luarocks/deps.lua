@@ -537,6 +537,13 @@ function deps.check_lua(vars)
       vars.LUA_INCDIR = find_lua_incdir(vars.LUA_DIR, cfg.lua_version, cfg.luajit_version)
       incdir_found = (vars.LUA_INCDIR ~= nil)
    end
+
+   -- Tarantool has no separate dynamic library. All necessary
+   -- symbols are exposed from its executable file.
+   if cfg.lua_interpreter == "tarantool" then
+      return true
+   end
+
    local shortv = cfg.lua_version:gsub("%.", "")
    local libnames = {
       "lua" .. cfg.lua_version,
