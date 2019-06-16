@@ -417,7 +417,14 @@ do
       if not util.exists(lua) then
          return nil
       end
-      local lv, err = util.popen_read(Q(lua) .. ' -e "io.write(_VERSION:sub(5))"')
+
+      local cmd = 'io.write(_VERSION:sub(5))'
+      -- Tarantool falls into the interactive mode if no script is
+      -- given even when -e option is passed.
+      if lua:find('tarantool') then
+         cmd = cmd .. ' os.exit()'
+      end
+      local lv, err = util.popen_read(Q(lua) .. (' -e "%s"'):format(cmd))
       if lv == "" then
          return nil
       end
@@ -439,9 +446,15 @@ do
       end
 
       local ljv
+      local dir = require("luarocks.dir")
       if cfg.lua_version == "5.1" then
-         -- Ignores extra version info for custom builds, e.g. "LuaJIT 2.1.0-beta3 some-other-version-info"
-         ljv = util.popen_read(Q(cfg.variables.LUA) .. ' -e "io.write(tostring(jit and jit.version:gsub([[^%S+ (%S+).*]], [[%1]])))"')
+         local interp = dir.path(cfg.variables["LUA_BINDIR"], cfg.lua_interpreter)
+         local cmd = 'io.write(tostring(jit and jit.version:sub(8)))'
+         -- Exit from the iteractive mode. See the comment above.
+         if interp:find('tarantool') then
+            cmd = cmd .. ' os.exit()'
+         end
+         ljv = util.popen_read(Q(interp) .. (' -e "%s"'):format(cmd))
          if ljv == "nil" then
             ljv = nil
          end
@@ -478,6 +491,7 @@ do
          end
          if luaver == "5.1" or not luaver then
             table.insert(names, "luajit" .. exe_suffix)
+            table.insert(names, "tarantool")
          end
          table.insert(names, "lua" .. exe_suffix)
 
