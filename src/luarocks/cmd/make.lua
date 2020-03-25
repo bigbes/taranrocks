@@ -59,6 +59,8 @@ only dependencies of the rockspec (see `luarocks help install`).
 --sign              To be used with --pack-binary-rock. Also produce
                     a signature file for the generated .rock file.
 
+--chdir=<path>      Specify a source directory of the rock.
+
 ]]
 
 --- Driver function for "make" command.
@@ -68,6 +70,12 @@ only dependencies of the rockspec (see `luarocks help install`).
 function make.command(flags, rockspec_filename)
    assert(type(rockspec_filename) == "string" or not rockspec_filename)
    
+   if flags["chdir"] then
+      local ok, err = fs.change_dir(flags["chdir"])
+      if not ok then
+         return nil, err
+      end
+   end
    if not rockspec_filename then
       local err
       rockspec_filename, err = util.get_default_rockspec()

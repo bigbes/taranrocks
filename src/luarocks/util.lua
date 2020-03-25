@@ -92,6 +92,7 @@ local supported_flags = {
    ["binary"] = true,
    ["branch"] = "<branch-name>",
    ["build-deps"] = true,
+   ["chdir"] = "<path>",
    ["debug"] = true,
    ["deps"] = true,
    ["deps-mode"] = "<mode>",
