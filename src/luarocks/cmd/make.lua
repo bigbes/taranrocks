@@ -41,6 +41,7 @@ function make.cmd_options(parser)
       "being built into a luarocks.lock file in the current directory.")
    parser:flag("--no-manifest", "Skip creating/updating the manifest")
    parser:flag("--only-deps --deps-only", "Install only the dependencies of the rock.")
+   parser:option("--chdir", "Specify a source directory of the rock."):argname("<path>")
    util.deps_mode_option(parser)
 end
 
@@ -77,6 +78,13 @@ end
 -- error message otherwise. exitcode is optionally returned.
 function make.command(args)
    local rockspec_filename = args.rockspec
+
+   if args.chdir then
+      local ok, err = fs.change_dir(args.chdir)
+      if not ok then
+         return nil, err
+      end
+   end
    if not rockspec_filename then
       local err
       rockspec_filename, err = util.get_default_rockspec()
