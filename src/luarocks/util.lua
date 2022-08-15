@@ -625,6 +625,16 @@ function util.get_rocks_provided(rockspec)
       rocks_provided["tarantool"] = tarantool_version.."-1"
    end
 
+   -- If luarocks is launched from tt, it cannot directly access
+   -- the _TARANTOOL variable.
+   local tarantool_ver_env = os.getenv("TT_CLI_TARANTOOL_VERSION")
+   if tarantool_ver_env ~= nil then
+      local tarantool_version = tarantool_ver_env:match("([^-]+)-")
+      if tarantool_version ~= nil then
+         rocks_provided["tarantool"] = tarantool_version.."-1"
+      end
+   end
+
    if cfg.rocks_provided then
       util.deep_merge_under(rocks_provided, cfg.rocks_provided)
    end
