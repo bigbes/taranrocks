@@ -508,6 +508,17 @@ local function make_rocks_provided(lua_version, luajit_version)
       rocks_provided_3_0["tarantool"] = tarantool_version.."-1"
    end
 
+   -- If luarocks is launched from tt, it cannot directly access
+   -- the _TARANTOOL variable.
+   local tarantool_version = os.getenv("TT_CLI_TARANTOOL_VERSION")
+   if tarantool_version ~= nil then
+      tarantool_version = tarantool_version:match("([^-]+)-")
+      if tarantool_version ~= nil then
+         rocks_provided["tarantool"] = tarantool_version.."-1"
+         rocks_provided_3_0["tarantool"] = tarantool_version.."-1"
+      end
+   end
+
    return rocks_provided, rocks_provided_3_0
 end
 
