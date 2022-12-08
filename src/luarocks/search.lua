@@ -216,6 +216,55 @@ local function pick_latest_version(name, versions)
    return nil
 end
 
+--- Get the URL for the latest in a set of versions. Local versions,
+-- even non-latest, has a priority over remote and will be picked if available.
+-- @param name string: The package name to be used in the URL.
+-- @param versions table: An array of version informations, as stored
+-- in search result trees.
+-- @return string or nil: the URL for the latest version if one could
+-- be picked, or nil.
+local function pick_latest_local_version(name, versions)
+   assert(type(name) == "string" and not name:match("/"))
+   assert(type(versions) == "table")
+
+   local vtables = {}
+   for v, rock_info in pairs(versions) do
+      table.insert(vtables, vers.parse_version(v))
+      local local_repo = false
+      for _, item in pairs(rock_info) do
+         local protocol, _ = dir.split_url(item.repo)
+         if protocol == "file" then
+            local_repo = true
+         end
+      end
+      vtables[#vtables].local_repo = local_repo
+   end
+   table.sort(vtables, function(version1, version2)
+      if version1.local_repo == version2.local_repo then
+         return version1 < version2
+      else
+         return version2.local_repo
+      end
+   end)
+   local version = vtables[#vtables].string
+   local items = versions[version]
+   if items then
+      local pick = 1
+      for i, item in ipairs(items) do
+         if (item.arch == 'src' and items[pick].arch == 'rockspec')
+         or (item.arch ~= 'src' and item.arch ~= 'rockspec') then
+            pick = i
+            local protocol, _ = dir.split_url(item.repo)
+            if protocol == "file" then
+               break
+            end
+         end
+      end
+      return path.make_url(items[pick].repo, name, version, items[pick].arch)
+   end
+   return nil
+end
+
 -- Find out which other Lua versions provide rock versions matching a query,
 -- @param query table: a query object.
 -- @param cli boolean: print status messages as it works
@@ -299,6 +348,10 @@ function search.find_suitable_rock(query, cli)
       -- Shouldn't happen as query must match only one package.
       return nil, "Several rocks matched query."
    else
+      local local_first = os.getenv("LOCAL_REPO_FIRST")
+      if local_first and local_first ~= "0" then
+         return pick_latest_local_version(query.name, result_tree[first_rock])
+      end
       return pick_latest_version(query.name, result_tree[first_rock])
    end
 end
