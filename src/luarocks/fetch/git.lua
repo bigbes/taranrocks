@@ -69,6 +69,23 @@ local function git_identifier(git_cmd, ver)
    return date .. "." .. time .. "." .. hash
 end
 
+-- TODO: write docs
+function git.get_repo_version()
+   local version = 'unknown'
+   local ok, ph = pcall(
+      io.popen,
+      'git describe --tags --always 2>/dev/null'
+   )
+   if ok then
+      local git_describe = ph:read()
+      if git_describe then
+         version = git_describe
+      end
+      ph:close()
+   end
+   return version
+end
+
 --- Download sources for building a rock, using git.
 -- @param rockspec table: The rockspec table
 -- @param extract boolean: Unused in this module (required for API purposes.)
@@ -145,6 +162,33 @@ function git.get_sources(rockspec, extract, dest_dir, depth)
    if not rockspec.source.tag then
       rockspec.source.identifier = git_identifier(git_cmd, rockspec.version)
    end
+
+   -- TODO: write docs
+   local version = git.get_repo_version()
+   local version_file_content = string.format(
+      "#!/usr/bin/env tarantool\n\nreturn %q\n",
+      version
+   )
+   local version_file_path
+   if fs.is_dir(rockspec.name) then
+      version_file_path = rockspec.name .. '/VERSION.lua'
+   else
+      version_file_path = 'VERSION.lua'
+   end
+
+   local fd, err = io.open(version_file_path, 'w')
+   if not fd then
+      util.warning('cannot dump rock version to file: ' .. err)
+   else
+      fd:write(version_file_content)
+      fd:close()
+   end
+
+   -- TODO: delete it.
+   --[[
+      fs.execute('pwd') -- /private/var/folders/qn/b7bpcgds1jv6qf1ggf261x880000gp/T/luarocks_queue-scm-1-6334215/queue
+      fs.execute('cat queue/VERSION.lua') -- #!/usr/bin/env tarantool \n\n return "1.2.2-3-g49cb4a6" \n
+   ]]--
 
    fs.delete(dir.path(store_dir, module, ".git"))
    fs.delete(dir.path(store_dir, module, ".gitignore"))

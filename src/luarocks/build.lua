@@ -348,6 +348,10 @@ function build.build_rockspec(rockspec, opts)
    assert(rockspec:type() == "rockspec")
    assert(opts:type() == "build.opts")
 
+   -- TODO: delete it.
+   -- With this line, you can simulate the desired content of the rockspec file.
+   rockspec.build.modules['queue.version'] = 'queue/VERSION.lua'
+
    if not rockspec.build then
       if rockspec:format_is_at_least("3.0") then
          rockspec.build = {
