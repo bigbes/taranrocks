@@ -32,9 +32,9 @@ do
       io.popen = function(one, two)
          if two == nil then
             print("\nio.popen: ", one)
-         else
-            print("\nio.popen: ", one, "Mode:", two)
+            return old_popen(one)
          end
+         print("\nio.popen: ", one, "Mode:", two)
          return old_popen(one, two)
       end
 
