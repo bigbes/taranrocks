@@ -48,7 +48,7 @@ function fs_lua.is_writable(file)
       if fh then fh:close() end
       os.remove(file2)
    else
-      local fh = io.open(file, 'r+b')
+      local fh = io.open(file, 'rb+')
       result = fh ~= nil
       if fh then fh:close() end
    end
