@@ -418,37 +418,6 @@ local function get_parser(description, cmd_modules)
       "' without any arguments to see the configuration.")
       :help_max_width(80)
       :add_help_command()
-      :add_complete_command({
-         help_max_width = 100,
-         summary = "Output a shell completion script.",
-         description = [[
-Output a shell completion script.
-
-Enabling completions for Bash:
-
-   Add the following line to your ~/.bashrc:
-      source <(]]..basename..[[ completion bash)
-   or save the completion script to the local completion directory:
-      ]]..basename..[[ completion bash > ~/.local/share/bash-completion/completions/]]..basename..[[
-
-
-Enabling completions for Zsh:
-
-   Save the completion script to a file in your $fpath.
-   You can add a new directory to your $fpath by adding e.g.
-      fpath=(~/.zfunc $fpath)
-   to your ~/.zshrc.
-   Then run:
-      ]]..basename..[[ completion zsh > ~/.zfunc/_]]..basename..[[
-
-
-Enabling completion for Fish:
-
-   Add the following line to your ~/.config/fish/config.fish:
-      ]]..basename..[[ completion fish | source
-   or save the completion script to the local completion directory:
-      ]]..basename..[[ completion fish > ~/.config/fish/completions/]]..basename..[[.fish
-]]})
       :command_target("command")
       :require_command(false)
 
