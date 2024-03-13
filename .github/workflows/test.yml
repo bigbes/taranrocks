@@ -79,5 +79,5 @@ jobs:
     - name: Smoke Test
       run: |
         ./configure
-        ./makedist dev
+        ./makedist dev $(dirname $(dirname $(which lua)))
         ./smoke_test.sh luarocks-dev.tar.gz
