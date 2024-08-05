@@ -734,16 +734,18 @@ function cfg.init(detected, warning)
    end
 
    -- Load system configuration file
-   sys_config_file = dir.path(cfg.sysconfdir, config_file_name)
-   local sys_config_ok, err = load_config_file(cfg, platforms, sys_config_file)
-   if err then
-      exit_ok, exit_err, exit_what = nil, err, "config"
+   if not hardcoded.FORCE_HARDCODED then
+      sys_config_file = dir.path(cfg.sysconfdir, config_file_name)
+      local sys_config_ok, err = load_config_file(cfg, platforms, sys_config_file)
+      if err then
+         exit_ok, exit_err, exit_what = nil, err, "config"
+      end
    end
 
    -- Load user configuration file (if allowed)
    local home_config_ok
    local project_config_ok
-   if not hardcoded.FORCE_CONFIG then
+   if not hardcoded.FORCE_CONFIG and not hardcoded.FORCE_HARDCODED then
       local env_var   = "LUAROCKS_CONFIG_" .. cfg.lua_version:gsub("%.", "_")
       local env_value = os.getenv(env_var)
       if not env_value then

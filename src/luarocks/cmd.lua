@@ -232,7 +232,7 @@ do
       end
 
       local function find_default_lua_version(args, project_dir)
-         if hardcoded.FORCE_CONFIG then
+         if hardcoded.FORCE_CONFIG or hardcoded.FORCE_HARDCODED then
             return nil
          end
 
