@@ -382,7 +382,11 @@ local function get_config_text(cfg)  -- luacheck: ignore 431
 
    buf = buf.."\n   Configuration files:\n"
    local conf = cfg.config_files
-   buf = buf.."      System  : "..show_status(fs.absolute_name(conf.system.file), conf.system.found).."\n"
+   if not cfg.variables.FORCE_HARDCODED then
+      buf = buf.."      System  : "..show_status(fs.absolute_name(conf.system.file), conf.system.found).."\n"
+   else
+      buf = buf.."      System  : disabled in this LuaRocks installation.\n"
+   end
    if conf.user.file then
       buf = buf.."      User    : "..show_status(fs.absolute_name(conf.user.file), conf.user.found).."\n"
    else
@@ -589,6 +593,9 @@ function cmd.run_command(description, commands, external_namespace, ...)
    -- Now that the config is fully loaded, reinitialize fs using the full
    -- feature set.
    fs.init()
+   if cfg.variables.FORCE_HARDCODED and cfg.variables.LUA then
+      lua_found = true
+   end
 
    -- if the Lua interpreter wasn't explicitly found before cfg.init,
    -- try again now.

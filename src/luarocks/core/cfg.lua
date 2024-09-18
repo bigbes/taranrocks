@@ -634,6 +634,7 @@ function cfg.init(detected, warning)
 
    -- Use detected values as defaults, overridable via config files or CLI args
 
+   hardcoded.LUA = dir.path(hardcoded.LUA_BINDIR,hardcoded.LUA_INTERPRETER)
    local hardcoded_lua = hardcoded.LUA
    local hardcoded_lua_dir = hardcoded.LUA_DIR
    local hardcoded_lua_bindir = hardcoded.LUA_BINDIR
@@ -740,10 +741,14 @@ function cfg.init(detected, warning)
       exit_ok, exit_err, exit_what = nil, err, "config"
    end
 
+   if hardcoded.FORCE_HARDCODED then
+      util.deep_merge(cfg.variables, hardcoded)
+   end
+
    -- Load user configuration file (if allowed)
    local home_config_ok
    local project_config_ok
-   if not hardcoded.FORCE_CONFIG then
+   if not hardcoded.FORCE_CONFIG and not hardcoded.FORCE_HARDCODED then
       local env_var   = "LUAROCKS_CONFIG_" .. cfg.lua_version:gsub("%.", "_")
       local env_value = os.getenv(env_var)
       if not env_value then
