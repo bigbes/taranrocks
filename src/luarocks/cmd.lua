@@ -573,6 +573,9 @@ function cmd.run_command(description, commands, external_namespace, ...)
    -- Now that the config is fully loaded, reinitialize fs using the full
    -- feature set.
    fs.init()
+   if cfg.variables.FORCE_HARDCODED and cfg.variables.LUA_INTERPRETER then
+      lua_found = true
+   end
 
    -- if the Lua interpreter wasn't explicitly found before cfg.init,
    -- try again now.

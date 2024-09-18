@@ -763,6 +763,10 @@ function cfg.init(detected, warning)
       end
    end
 
+   if hardcoded.FORCE_HARDCODED then
+      util.deep_merge(cfg.variables, hardcoded)
+   end
+
    ----------------------------------------
    -- Config files are loaded.
    -- Let's finish up the cfg table.
