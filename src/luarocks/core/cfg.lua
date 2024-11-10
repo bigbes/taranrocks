@@ -570,20 +570,6 @@ local function use_defaults(cfg, defaults)
    end
 end
 
-local function get_first_arg()
-   local arg = rawget(_G, 'arg')
-   if not arg then
-      return
-   end
-   local first_arg = arg[0]
-   local i = -1
-   while arg[i] do
-      first_arg = arg[i]
-      i = i -1
-   end
-   return first_arg
-end
-
 --------------------------------------------------------------------------------
 
 local cfg = {}
