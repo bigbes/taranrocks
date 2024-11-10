@@ -382,11 +382,7 @@ local function get_config_text(cfg)  -- luacheck: ignore 431
 
    buf = buf.."\n   Configuration files:\n"
    local conf = cfg.config_files
-   if not cfg.variables.FORCE_HARDCODED then
-      buf = buf.."      System  : "..show_status(fs.absolute_name(conf.system.file), conf.system.found).."\n"
-   else
-      buf = buf.."      System  : disabled in this LuaRocks installation.\n"
-   end
+   buf = buf.."      System  : "..show_status(fs.absolute_name(conf.system.file), conf.system.found).."\n"
    if conf.user.file then
       buf = buf.."      User    : "..show_status(fs.absolute_name(conf.user.file), conf.user.found).."\n"
    else
