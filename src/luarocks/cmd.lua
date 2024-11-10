@@ -495,6 +495,7 @@ Enabling completion for Fish:
 end
 
 local function get_first_arg()
+   local arg = rawget(_G, 'arg')
    if not arg then
       return
    end
