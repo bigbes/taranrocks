@@ -180,7 +180,6 @@ local function make_defaults(lua_version, target_cpu, platforms, home, hardcoded
    -- Configure defaults:
    local defaults = {
 
-      lua_interpreter = hardcoded.LUA_INTERPRETER or "lua",
       local_by_default = hardcoded.LOCAL_BY_DEFAULT or false,
       accept_unknown_fields = false,
       fs_use_modules = true,
