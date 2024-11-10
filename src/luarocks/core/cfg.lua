@@ -191,9 +191,9 @@ local function make_defaults(lua_version, target_cpu, platforms, home, hardcoded
       cache_timeout = 60,
       cache_fail_timeout = 86400,
 
-      lua_modules_path = hardcoded.LUA_MODULES_LUA_SUBDIR or "/share/lua/"..lua_version,
-      lib_modules_path = hardcoded.LUA_MODULES_LIB_SUBDIR or "/lib/lua/"..lua_version,
-      rocks_subdir = hardcoded.ROCKS_SUBDIR or "/lib/luarocks/rocks-"..lua_version,
+      lua_modules_path = hardcoded.LUA_MODULES_LUA_SUBDIR or dir.path("share", "lua", lua_version),
+      lib_modules_path = hardcoded.LUA_MODULES_LIB_SUBDIR or dir.path("lib", "lua", lua_version),
+      rocks_subdir = hardcoded.ROCKS_SUBDIR or dir.path("lib", "luarocks", "rocks-"..lua_version),
 
       arch = "unknown",
       lib_extension = "unknown",
