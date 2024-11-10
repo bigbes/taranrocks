@@ -941,7 +941,7 @@ function cfg.init(detected, warning)
       return table.concat(platform_keys, ", ")
    end
 
-   cfg.initialized = true
+   cfg.initialized = exit_ok and cfg.variables.LUA ~= nil
    return exit_ok, exit_err, exit_what
 end
 
