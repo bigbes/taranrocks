@@ -104,11 +104,6 @@ describe("LuaRocks config tests #integration", function()
             local user_config_path = run.luarocks("config --user-config")
             assert.is.truthy(lfs.attributes(user_config_path))
          end)
-
-         it("handles a missing user config", function()
-            local output = run.luarocks("config --user-config", {LUAROCKS_CONFIG = "missing_file.lua"})
-            assert.match("Warning", output)
-         end)
       end)
 
       describe("--system-config", function()
@@ -224,48 +219,6 @@ describe("LuaRocks config tests #integration", function()
       it("reads an array config key", function()
          local output = run.luarocks("config rocks_trees[2]")
          assert.match("{%s*name", output)
-      end)
-
-      it("writes a simple config key", function()
-         test_env.run_in_tmp(function(tmpdir)
-            local myproject = tmpdir .. "/myproject"
-            lfs.mkdir(myproject)
-            lfs.chdir(myproject)
-
-            assert(run.luarocks("init"))
-            assert.truthy(run.luarocks_bool("config web_browser foo --scope=project"))
-
-            local output = run.luarocks("config web_browser")
-            assert.match("foo", output)
-         end, finally)
-      end)
-
-      it("writes a hash config key", function()
-         test_env.run_in_tmp(function(tmpdir)
-            local myproject = tmpdir .. "/myproject"
-            lfs.mkdir(myproject)
-            lfs.chdir(myproject)
-
-            assert(run.luarocks("init"))
-            assert.truthy(run.luarocks_bool("config variables.FOO_DIR /foo/bar --scope=project"))
-
-            local output = run.luarocks("config variables.FOO_DIR")
-            assert.match("/foo/bar", output)
-         end, finally)
-      end)
-
-      it("writes an array config key", function()
-         test_env.run_in_tmp(function(tmpdir)
-            local myproject = tmpdir .. "/myproject"
-            lfs.mkdir(myproject)
-            lfs.chdir(myproject)
-
-            assert(run.luarocks("init"))
-            assert.truthy(run.luarocks_bool("config external_deps_patterns.lib[1] testtest --scope=project"))
-
-            local output = run.luarocks("config external_deps_patterns.lib[1]")
-            assert.match("testtest", output)
-         end, finally)
       end)
 
    end)

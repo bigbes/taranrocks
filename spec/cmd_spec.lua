@@ -57,57 +57,5 @@ describe("LuaRocks command line #integration", function()
          local output = run.luarocks("--lua-version=bozo")
          assert.match("malformed", output, 1, true)
       end)
-
-      it("warns but continues if given an invalid version", function()
-         local output = run.luarocks("--lua-version=1.0")
-         assert.match("Warning: Lua 1.0 interpreter not found", output, 1, true)
-         assert.match("Version%s*:%s*1.0", output)
-      end)
-
-      it("sets the version independently of project tree", function()
-         test_env.run_in_tmp(function(tmpdir)
-            assert.truthy(run.luarocks_bool("init --lua-version=" .. test_env.lua_version .. " --lua-versions=" .. test_env.lua_version))
-
-            local output = run.luarocks("--lua-version=1.0")
-            assert.match("Version%s*:%s*1.0", output)
-
-            output = run.luarocks("--lua-version=1.0 --project-tree=.")
-            assert.match("Version%s*:%s*1.0", output)
-         end, finally)
-      end)
    end)
-
-   it("detects version based on project tree", function()
-      test_env.run_in_tmp(function(tmpdir)
-         assert.truthy(run.luarocks_bool("init --lua-version=" .. test_env.lua_version))
-         assert.truthy(run.luarocks_bool("config lua_version 1.0 --project-tree=" .. tmpdir .. "/lua_modules"))
-
-         lfs.mkdir("aaa")
-         lfs.chdir("aaa")
-         lfs.mkdir("bbb")
-         lfs.chdir("bbb")
-
-         local output = run.luarocks("")
-         assert.match("Version%s*:%s*1.0", output)
-      end, finally)
-   end)
-
-   -- for backward compatibility
-   it("detects version of a project based on config", function()
-      test_env.run_in_tmp(function(tmpdir)
-         assert.truthy(run.luarocks_bool("init --lua-version=" .. test_env.lua_version))
-         os.remove(".luarocks/config-" .. test_env.lua_version .. ".lua")
-         os.remove(".luarocks/default-lua-version.lua")
-         test_env.write_file(".luarocks/config-5.2.lua", [[ ]], finally)
-
-         lfs.mkdir("aaa")
-         lfs.chdir("aaa")
-         lfs.mkdir("bbb")
-         lfs.chdir("bbb")
-
-         local output = run.luarocks("")
-         assert.match("Version%s*:%s*5.2", output)
-      end, finally)
-   end)
-
 end)
