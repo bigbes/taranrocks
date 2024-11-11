@@ -58,6 +58,7 @@ jobs:
         busted -o htest --exclude-tags=ssh,gpg,git,unit --verbose -Xhelper "lua_dir=$(luarocks config variables.LUA_DIR),ci,env=full"
 
     - name: Coverage
+      if: startsWith(matrix.os, 'ubuntu')
       run: |
         eval $(luarocks path)
         luacov -c testrun/luacov.config
